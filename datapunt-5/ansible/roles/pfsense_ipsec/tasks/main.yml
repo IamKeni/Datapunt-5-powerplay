@@ -1,0 +1,4 @@
+---
+- import_tasks: phase1.yml
+- import_tasks: phase2.yml
+- import_tasks: apply.yml

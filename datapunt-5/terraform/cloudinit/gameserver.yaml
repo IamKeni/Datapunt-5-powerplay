@@ -1,0 +1,40 @@
+#cloud-config
+
+users:
+  - name: ${admin_username}
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: [sudo]
+    shell: /bin/bash
+    lock_passwd: true
+
+package_update: true
+package_upgrade: true
+packages:
+  - cifs-utils
+  - htop
+  - curl
+  - unzip
+  - ufw
+
+# Firewall instellen: alleen game traffic en SSH vanuit VNet
+runcmd:
+  # Azure Files mountpunt aanmaken
+  - mkdir -p /mnt/gameshare
+
+  # fstab entry voor Azure Files (CIFS)
+  - |
+    echo "//${storage_account_name}.file.core.windows.net/${fileshare_name} /mnt/gameshare cifs vers=3.0,username=${storage_account_name},password=${storage_account_key},dir_mode=0777,file_mode=0777,serverino,nofail 0 0" >> /etc/fstab
+
+  # Mount uitvoeren
+  - mount -a
+
+  # Game server werkmap aanmaken met symlink naar gedeelde opslag
+  - mkdir -p /srv/gameserver
+  - ln -sf /mnt/gameshare /srv/gameserver/shared
+
+  # Firewall instellen
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow from 10.0.0.0/16 to any port 22 proto tcp
+  - ufw allow 7777/udp
+  - ufw --force enable

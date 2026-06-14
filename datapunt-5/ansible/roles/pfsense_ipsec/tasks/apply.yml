@@ -1,0 +1,11 @@
+---
+- name: "IPsec | Pas configuratie toe"
+  ansible.builtin.uri:
+    url: "{{ pfsense_host }}/api/v2/vpn/ipsec/apply"
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ pfsense_api_token }}"
+    body_format: json
+    body: {}
+    validate_certs: false

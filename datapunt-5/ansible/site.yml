@@ -1,0 +1,28 @@
+---
+- name: "Azure pfSense | IPsec configureren"
+  hosts: pfsense_azure
+  gather_facts: false
+  connection: local
+  roles:
+    - pfsense_ipsec
+
+- name: "Lab pfSense | IPsec configureren"
+  hosts: pfsense_lab
+  gather_facts: false
+  connection: local
+  roles:
+    - pfsense_ipsec
+
+- name: "Azure pfSense | BGP configureren"
+  hosts: pfsense_azure
+  gather_facts: false
+  connection: local
+  roles:
+    - pfsense_bgp
+
+- name: "Lab pfSense | BGP configureren"
+  hosts: pfsense_lab
+  gather_facts: false
+  connection: local
+  roles:
+    - pfsense_bgp

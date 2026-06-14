@@ -1,0 +1,56 @@
+---
+- name: "IPsec | Configureer Phase 1"
+  ansible.builtin.uri:
+    url: "{{ pfsense_host }}/api/v2/vpn/ipsec/phase1"
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ pfsense_api_token }}"
+    body_format: json
+    body:
+      descr: "{{ ipsec_description }}"
+      disabled: false
+      iketype: "{{ ipsec_iketype }}"
+      mode: "main"
+      protocol: "{{ ipsec_protocol }}"
+      interface: "{{ ipsec_interface }}"
+      remote_gateway: "{{ ipsec_remote_gateway }}"
+      authentication_method: "pre_shared_key"
+      pre_shared_key: "{{ ipsec_psk }}"
+      myid_type: "myaddress"
+      myid_data: ""
+      peerid_type: "any"
+      peerid_data: ""
+      nat_traversal: "on"
+      encryption:
+        - encryption_algorithm_name: "aes"
+          encryption_algorithm_keylen: 256
+          hash_algorithm: "sha256"
+          dhgroup: 14
+          prf_algorithm: "sha256"
+    validate_certs: false
+    status_code: [200, 201, 400, 409]
+  register: phase1_result
+
+- name: "IPsec | Toon Phase 1 resultaat"
+  ansible.builtin.debug:
+    msg: "Phase 1 response: {{ phase1_result.json.response_id }}"
+
+# Tunnel nieuw aangemaakt — sla de ikeid op uit de response
+- name: "IPsec | Sla ikeid op (nieuwe tunnel)"
+  ansible.builtin.set_fact:
+    phase1_ikeid: "{{ phase1_result.json.data.ikeid }}"
+  when:
+    - phase1_result.json.response_id != "IPSEC_PHASE_1_ILLEGAL_DUPLICATE_REMOTE_GATEWAY"
+    - phase1_result.json.data.ikeid is defined
+
+# Tunnel bestond al — gebruik de vaste ikeid uit host_vars
+- name: "IPsec | Gebruik vaste ikeid (tunnel bestond al)"
+  ansible.builtin.set_fact:
+    phase1_ikeid: "{{ ipsec_phase1_ikeid }}"
+  when:
+    - phase1_result.json.response_id == "IPSEC_PHASE_1_ILLEGAL_DUPLICATE_REMOTE_GATEWAY"
+
+- name: "IPsec | Toon gebruikte ikeid"
+  ansible.builtin.debug:
+    msg: "Gebruikte ikeid: {{ phase1_ikeid }}"

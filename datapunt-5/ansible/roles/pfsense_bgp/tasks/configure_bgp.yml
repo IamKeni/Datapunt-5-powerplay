@@ -1,0 +1,55 @@
+---
+# FRR heeft geen eigen API endpoints in deze pfSense versie.
+# We configureren BGP direct via vtysh met de command_prompt API.
+
+# ---------------------------------------------------------------
+# Stap 1: Activeer FRR daemon via vtysh
+# ---------------------------------------------------------------
+- name: "BGP | Activeer FRR en configureer BGP via vtysh"
+  ansible.builtin.uri:
+    url: "{{ pfsense_host }}/api/v2/diagnostics/command_prompt"
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ pfsense_api_token }}"
+    body_format: json
+    body:
+      command: >-
+        vtysh -c "configure terminal"
+        -c "router bgp {{ bgp_local_as }}"
+        -c "bgp router-id {{ bgp_router_id }}"
+        -c "neighbor {{ bgp_peer_ip }} remote-as {{ bgp_peer_as }}"
+        -c "neighbor {{ bgp_peer_ip }} description {{ bgp_peer_description }}"
+        -c "neighbor {{ bgp_peer_ip }} next-hop-self"
+        -c "address-family ipv4 unicast"
+        -c "network {{ bgp_advertise_network }}"
+        -c "neighbor {{ bgp_peer_ip }} activate"
+        -c "exit-address-family"
+        -c "exit"
+        -c "write memory"
+    validate_certs: false
+  register: bgp_config_result
+
+- name: "BGP | Toon BGP configuratie resultaat"
+  ansible.builtin.debug:
+    msg: "BGP config output: {{ bgp_config_result.json.data | default(bgp_config_result.json) }}"
+
+# ---------------------------------------------------------------
+# Stap 2: Controleer BGP status
+# ---------------------------------------------------------------
+- name: "BGP | Controleer BGP neighbor status"
+  ansible.builtin.uri:
+    url: "{{ pfsense_host }}/api/v2/diagnostics/command_prompt"
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ pfsense_api_token }}"
+    body_format: json
+    body:
+      command: "vtysh -c 'show bgp summary'"
+    validate_certs: false
+  register: bgp_status_result
+
+- name: "BGP | Toon BGP neighbor status"
+  ansible.builtin.debug:
+    msg: "BGP status: {{ bgp_status_result.json.data | default(bgp_status_result.json) }}"

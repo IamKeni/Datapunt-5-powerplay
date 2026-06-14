@@ -1,0 +1,4 @@
+---
+- import_tasks: install_frr.yml
+- import_tasks: configure_bgp.yml
+- import_tasks: apply.yml

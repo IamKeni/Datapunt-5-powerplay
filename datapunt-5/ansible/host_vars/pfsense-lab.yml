@@ -1,0 +1,34 @@
+---
+# ============================================================
+# pfSense Lab — host-specifieke variabelen
+# ============================================================
+
+# REST API verbinding
+pfsense_host:      "https://145.44.232.230"
+pfsense_api_token: "ec9bb850207f1c486fdf58c2cb4e67ff"
+
+# ============================================================
+# IPsec Phase 1 — richting Azure pfSense
+# ============================================================
+ipsec_interface:      "wan"
+ipsec_remote_gateway: "52.157.71.154"   # Publiek IP Azure pfSense
+
+# ikeid van de bestaande tunnel
+ipsec_phase1_ikeid: 1
+
+# ============================================================
+# IPsec Phase 2 — VTI tunnel adressen
+# Lab-kant is .2, Azure-kant is .1
+# ============================================================
+ipsec_vti_local:  "10.10.0.2"   # Eigen VTI adres
+ipsec_vti_remote: "10.10.0.1"   # VTI adres andere kant
+
+# ============================================================
+# BGP — Lab pfSense
+# ============================================================
+bgp_local_as:          "65002"
+bgp_router_id:         "172.16.0.1"
+bgp_peer_ip:           "10.10.0.1"
+bgp_peer_as:           "65001"
+bgp_peer_description:  "Azure pfSense"
+bgp_advertise_network: "172.16.0.0/24"

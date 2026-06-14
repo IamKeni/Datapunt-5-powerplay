@@ -1,0 +1,51 @@
+---
+- name: "FRR | Installeer FRR pakket (wordt overgeslagen als al aanwezig)"
+  ansible.builtin.uri:
+    url: "{{ pfsense_host }}/api/v2/system/package"
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ pfsense_api_token }}"
+    body_format: json
+    body:
+      name: "frr"
+    validate_certs: false
+    status_code: [200, 201, 400, 404, 409]
+  register: frr_install_result
+
+- name: "FRR | Toon installatiestatus"
+  ansible.builtin.debug:
+    msg: >-
+      FRR installatie response: {{ frr_install_result.json.response_id }}
+      {% if frr_install_result.json.response_id == 'SUCCESS' %}
+      — FRR wordt nu geïnstalleerd.
+      {% elif frr_install_result.json.response_id in ['FOREIGN_MODEL_FIELD_VALUE_NOT_FOUND', 'MODEL_REQUIRES_ID'] %}
+      — FRR is al geïnstalleerd, installatie overgeslagen.
+      {% else %}
+      — Onbekende status, doorgaan met BGP configuratie.
+      {% endif %}
+
+- name: "FRR | Wacht tot FRR geïnstalleerd is (alleen bij nieuwe installatie)"
+  ansible.builtin.wait_for:
+    timeout: 90
+  when: frr_install_result.json.response_id == 'SUCCESS'
+
+- name: "FRR | Herstart webGUI na installatie (alleen bij nieuwe installatie)"
+  ansible.builtin.uri:
+    url: "{{ pfsense_host }}/api/v2/system/restartwebgui"
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ pfsense_api_token }}"
+    body_format: json
+    body: {}
+    validate_certs: false
+  when: frr_install_result.json.response_id == 'SUCCESS'
+
+- name: "FRR | Wacht tot webGUI weer bereikbaar is (alleen bij nieuwe installatie)"
+  ansible.builtin.wait_for:
+    host: "{{ ansible_host }}"
+    port: 443
+    delay: 15
+    timeout: 120
+  when: frr_install_result.json.response_id == 'SUCCESS'

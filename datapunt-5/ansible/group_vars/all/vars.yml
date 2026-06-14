@@ -1,0 +1,23 @@
+---
+# ============================================================
+# SSH toegang
+# ============================================================
+ansible_user: pfadmin
+ansible_ssh_private_key_file: ~/.ssh/azure_key
+
+# ============================================================
+# IPsec gedeelde instellingen
+# ============================================================
+ipsec_description:        "Ansible VPN P1 Tunnel"
+ipsec_iketype:            "ikev2"
+ipsec_protocol:           "inet"
+ipsec_psk:                "Welkom01!"
+
+ipsec_phase2_description: "Ansible BGP VTI Tunnel"
+ipsec_phase2_protocol:    "esp"
+ipsec_phase2_lifetime:    3600
+
+# ============================================================
+# FRR / BGP gedeelde instellingen
+# ============================================================
+frr_master_password: "Welkom01!"

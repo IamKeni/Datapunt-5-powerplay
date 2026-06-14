@@ -1,0 +1,6 @@
+---
+# FRR configuratie wordt direct via vtysh toegepast (write memory).
+# Geen aparte apply stap nodig.
+- name: "BGP | Wacht 5 seconden zodat BGP sessie opkomt"
+  ansible.builtin.wait_for:
+    timeout: 5

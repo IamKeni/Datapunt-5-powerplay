@@ -1,0 +1,35 @@
+---
+- name: "IPsec | Configureer Phase 2 (VTI)"
+  ansible.builtin.uri:
+    url: "{{ pfsense_host }}/api/v2/vpn/ipsec/phase2"
+    method: POST
+    headers:
+      Content-Type: application/json
+      X-API-Key: "{{ pfsense_api_token }}"
+    body: >-
+      {{
+        {
+          "ikeid": phase1_ikeid | int,
+          "descr": ipsec_phase2_description,
+          "mode": "vti",
+          "protocol": ipsec_phase2_protocol,
+          "localid_type": "address",
+          "localid_address": ipsec_vti_local,
+          "localid_netbits": 32,
+          "remoteid_type": "address",
+          "remoteid_address": ipsec_vti_remote,
+          "remoteid_netbits": 32,
+          "lifetime": ipsec_phase2_lifetime | int,
+          "encryption_algorithm_option": [{"name": "aes", "keylen": 256}],
+          "hash_algorithm_option": ["hmac_sha256"]
+        } | to_json
+      }}
+    validate_certs: false
+    status_code: [200, 201, 400, 409]
+  register: phase2_result
+  when: phase1_ikeid is defined
+
+- name: "IPsec | Toon Phase 2 resultaat"
+  ansible.builtin.debug:
+    msg: "Phase 2 response: {{ phase2_result.json.response_id }}"
+  when: phase1_ikeid is defined
